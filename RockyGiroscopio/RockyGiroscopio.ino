@@ -1,4 +1,3 @@
-//Prueba
 #include <I2Cdev.h>
 #include <Wire.h>
 #include "MPU6050.h"
