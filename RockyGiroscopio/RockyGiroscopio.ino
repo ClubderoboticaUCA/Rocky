@@ -5,10 +5,10 @@
 #define echoD 10 //2
 #define trigD 11 //3
 #define pin_pwmA 6  //5
-#define pin_pwmB 9  //6
-#define out0 5  //8
-#define out1 3  //9
-#define out2 4  //10
+#define pin_pwmB 5  //6
+#define out0 9  //8
+#define out1 4  //9
+#define out2 3  //10
 #define out3 2  //11
 #define echo 8  //13
 #define trig 7  //12
@@ -23,7 +23,10 @@ long tiempo_previo, tiempo;
 
 //FUNCIONES DE MOVIMIENTO
 //Hacia adelante
-void avanceAdelante(){
+void avanceAdelante(int pwm){
+  Serial.println("Estoy avanzando");
+  analogWrite(pin_pwmA,pwm);
+   analogWrite(pin_pwmB,pwm);
   digitalWrite(out0,LOW);
   digitalWrite(out1,HIGH);
   digitalWrite(out2,HIGH);
@@ -39,10 +42,18 @@ void giroDerecha(){
    digitalWrite(out3,HIGH);
 }
 void anguloDerecha(){
-  float angulo=0;
-  while(abs(angulo)<=90){  
+  //float angulo = 0;
+  int gx,gy,gz;
+  float anguloZ=0, anguloZ_previo=0;
+  Serial.println("estoy derecha");
+  while(abs(anguloZ)<=90){
+    Serial.println(anguloZ);
     giroDerecha();
-    angulo=CalcularAngulo();
+    sensor.getRotation(&gx,&gy,&gz);
+    tiempo=millis()-tiempo_previo;
+    tiempo_previo=millis();
+    anguloZ = (gz/131)*tiempo/1000.0 + anguloZ_previo;
+    anguloZ_previo=anguloZ;
   }
 }
 //Hacia la Izquierda
@@ -55,18 +66,27 @@ void giroIzquierda(){
    digitalWrite(out3,LOW);
 }
 void anguloIzquierda(){
-  float angulo = 0;
-  while(abs(angulo)<=90){   //Chequear si es 90 o -90
+  int gx,gy,gz;
+  float anguloZ=0, anguloZ_previo=0;
+  Serial.println("estoy izuierda");
+  while(abs(anguloZ)<=90){
+    Serial.println(anguloZ);
     giroIzquierda();
-    angulo=CalcularAngulo();
+    sensor.getRotation(&gx,&gy,&gz);
+    tiempo=millis()-tiempo_previo;
+    tiempo_previo=millis();
+    anguloZ = (gz/131)*tiempo/1000.0 + anguloZ_previo;
+    anguloZ_previo=anguloZ;
   }
 }
 //Frenado
 void detener(){
+  Serial.println("Frene");
   digitalWrite(out0,LOW);
   digitalWrite(out1,LOW);
   digitalWrite(out2,LOW);
   digitalWrite(out3,LOW);
+  delay(3000);
 }
 
 //FUNCIONES DE CALCULOS
@@ -90,35 +110,19 @@ double CalcularDistanciaDer(){
   duration = pulseIn(echoD,HIGH);  //Tiempo en microsegundos
   return duration*0.034/2; //
 }
-//Angulo de giro
-float CalcularAngulo(){
-  int gx,gy,gz;
-
-  float anguloZ, anguloZ_previo;
-
-  sensor.getRotation(&gx,&gy,&gz);
-  
-  tiempo=millis()-tiempo_previo;
-  tiempo_previo=millis();
-
-  anguloZ = (gz/131)*tiempo/1000.0 + anguloZ_previo;
-  anguloZ_previo=anguloZ;
-  
-  return anguloZ;
-}
 
 //FUNCIONES ANTI-CHOQUE
 //Choques frontales
 int FrenadoAutomatico(int distancia){ //Hay que hacerla la mas precisa
-  if (distancia>70){
+  if (distancia>40){
     return 255;//100%
   }
-  else if (distancia<70 && distancia>50){
-    return 165;
-  }
-  else if(distancia<50 && distancia>30){
-    return 120;
-  }
+//  else if (distancia<40 && distancia>25){
+//    return 165;
+//  }
+//  else if(distancia<25 && distancia>10){
+//    return 120;
+//  }
   else{
     return 0;
   }
@@ -176,7 +180,7 @@ void setup() {
   digitalWrite(out2,LOW);//MOTOR B
   digitalWrite(out3,LOW);
 
-  delay(10000);
+  delay(4000);
 }
 
 void loop() {
@@ -187,26 +191,28 @@ void loop() {
   distanciaDer = CalcularDistanciaDer();
   distancia = CalcularDistancia();
   int pwm   = FrenadoAutomatico(distancia);
+  Serial.print("pwm: ");
+  Serial.println(pwm);
   //Serial.println(distancia);
 
   float angulo = 0; 
    
    if(pwm!=0 && distanciaDer<=15){ //Se mueve para adelante y no tiene lugar a la derecha 
     //Avance adelante
-      avanceAdelante();
+      avanceAdelante(pwm);
    }else if(pwm!=0 && distanciaDer>15){  //Se mueve adelante y tiene lugar a la derecha
     //Frene, gire derecha, avance
       detener();
       anguloDerecha();
-      avanceAdelante();
+      //avanceAdelante();
    }else if(pwm==0 && distanciaDer>15){ //No se mueve adelante y tiene lugar a la derecha
     //Gire derecha, avance
+      detener();
       anguloDerecha();
-      avanceAdelante();
+      //avanceAdelante();
    }else if(pwm==0 && distanciaDer<=15){ //No se mueve adelante y no tiene lugar a la derecha
     //Gire izquierda
+      detener();
       anguloIzquierda();
    }
-
-   delay(2000);
 }
