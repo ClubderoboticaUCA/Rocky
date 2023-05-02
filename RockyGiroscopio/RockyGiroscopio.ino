@@ -2,16 +2,16 @@
 #include <Wire.h>
 #include "MPU6050.h"
 
-#define echoD 10 //2
-#define trigD 11 //3
-#define pin_pwmA 6  //5
-#define pin_pwmB 5  //6
-#define out0 9  //8
-#define out1 4  //9
-#define out2 3  //10
-#define out3 2  //11
-#define echo 8  //13
-#define trig 7  //12
+#define pin_pwmA 10  //5
+#define pin_pwmB 6  //6
+#define out0 11  //8
+#define out1 9  //9
+#define out2 8  //10
+#define out3 7  //11
+#define echo 4  //13
+#define trig 5  //12
+#define echoD 3  //13
+#define trigD 2  //12
 
 MPU6050 sensor;
 
@@ -113,17 +113,18 @@ double CalcularDistanciaDer(){
 
 //FUNCIONES ANTI-CHOQUE
 //Choques frontales
-int FrenadoAutomatico(int distancia){ //Hay que hacerla la mas precisa
-  if (distancia>40){
-    return 255;//100%
-  }
-//  else if (distancia<40 && distancia>25){
-//    return 165;
-//  }
-//  else if(distancia<25 && distancia>10){
-//    return 120;
-//  }
-  else{
+int FrenadoAutomatico(int distancia){
+  if(distancia>=60){
+    return 255; //100%
+  }else if(distancia<60 && distancia>=45){
+    return 204; //80%
+  }else if(distancia<45 && distancia>=35){
+    return 153; //60%
+  }else if(distancia<35 && distancia>=25){
+    return 102; //40%
+  }else if(distancia<25 && distancia>=15){
+    return 51;  //20%
+  }else{
     return 0;
   }
 }
