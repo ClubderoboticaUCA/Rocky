@@ -113,17 +113,26 @@ double CalcularDistanciaDer(){
 
 //FUNCIONES ANTI-CHOQUE
 //Choques frontales
+//int FrenadoAutomatico(int distancia){
+//  if(distancia>=29){
+//    return 255; //100%
+//  }else if(distancia<29 && distancia>=22){
+//    return 204; //80%
+//  }else if(distancia<22 && distancia>=20){
+//    return 120; //60%
+//  }else if(distancia<20 && distancia>=18){
+//    return 51; //40%
+//  }else{
+//    return 0;
+//  }
+//}
 int FrenadoAutomatico(int distancia){
-  if(distancia>=60){
+  if(distancia>=29){
     return 255; //100%
-  }else if(distancia<60 && distancia>=45){
-    return 204; //80%
-  }else if(distancia<45 && distancia>=35){
-    return 153; //60%
-  }else if(distancia<35 && distancia>=25){
-    return 102; //40%
-  }else if(distancia<25 && distancia>=15){
-    return 51;  //20%
+  }else if(distancia<22 && distancia>=20){
+    return 120; //60%
+  }else if(distancia<20 && distancia>=18){
+    return 51; //40%
   }else{
     return 0;
   }
@@ -197,7 +206,7 @@ void loop() {
   //Serial.println(distancia);
 
   float angulo = 0; 
-   
+   Serial.println(distanciaDer);
    if(pwm!=0 && distanciaDer<=15){ //Se mueve para adelante y no tiene lugar a la derecha 
     //Avance adelante
       avanceAdelante(pwm);
@@ -205,15 +214,18 @@ void loop() {
     //Frene, gire derecha, avance
       detener();
       anguloDerecha();
+      detener();
       //avanceAdelante();
    }else if(pwm==0 && distanciaDer>15){ //No se mueve adelante y tiene lugar a la derecha
     //Gire derecha, avance
       detener();
       anguloDerecha();
+      detener();
       //avanceAdelante();
    }else if(pwm==0 && distanciaDer<=15){ //No se mueve adelante y no tiene lugar a la derecha
     //Gire izquierda
       detener();
       anguloIzquierda();
+      detener();
    }
 }
