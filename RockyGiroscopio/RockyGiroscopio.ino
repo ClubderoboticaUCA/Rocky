@@ -13,10 +13,12 @@
 #define echoD 3  //13
 #define trigD 2  //12
 
+#define Ancho 30
+
 MPU6050 sensor;
 
 long duration;
-double distancia;
+double distanciaAdelante;
 double distanciaDer;
 
 long tiempo_previo, tiempo;
@@ -26,29 +28,28 @@ long tiempo_previo, tiempo;
 void avanceAdelante(int pwm){
   Serial.println("Estoy avanzando");
   analogWrite(pin_pwmA,pwm);
-   analogWrite(pin_pwmB,pwm);
+  analogWrite(pin_pwmB,pwm);
   digitalWrite(out0,LOW);
   digitalWrite(out1,HIGH);
   digitalWrite(out2,HIGH);
   digitalWrite(out3,LOW);
 }
 //Hacia la Derecha
-void giroDerecha(){
-   analogWrite(pin_pwmA,255);
-   analogWrite(pin_pwmB,255);
+void giroDerecha(int pwm){
+   analogWrite(pin_pwmA,pwm);
+   analogWrite(pin_pwmB,pwm);
    digitalWrite(out0,LOW);
    digitalWrite(out1,HIGH);
    digitalWrite(out2,LOW);
    digitalWrite(out3,HIGH);
 }
 void anguloDerecha(){
-  //float angulo = 0;
   int gx,gy,gz;
   float anguloZ=0, anguloZ_previo=0;
   Serial.println("estoy derecha");
-  while(abs(anguloZ)<=90){
+  while(abs(anguloZ)<88){
     Serial.println(anguloZ);
-    giroDerecha();
+    giroDerecha(calcularPwmGiro(abs(anguloZ)));
     sensor.getRotation(&gx,&gy,&gz);
     tiempo=millis()-tiempo_previo;
     tiempo_previo=millis();
@@ -57,9 +58,9 @@ void anguloDerecha(){
   }
 }
 //Hacia la Izquierda
-void giroIzquierda(){
-   analogWrite(pin_pwmA,255);
-   analogWrite(pin_pwmB,255);
+void giroIzquierda(int pwm){
+   analogWrite(pin_pwmA,pwm);
+   analogWrite(pin_pwmB,pwm);
    digitalWrite(out0,HIGH);
    digitalWrite(out1,LOW);
    digitalWrite(out2,HIGH);
@@ -69,9 +70,9 @@ void anguloIzquierda(){
   int gx,gy,gz;
   float anguloZ=0, anguloZ_previo=0;
   Serial.println("estoy izuierda");
-  while(abs(anguloZ)<=90){
+  while(abs(anguloZ)<88){
     Serial.println(anguloZ);
-    giroIzquierda();
+    giroIzquierda(calcularPwmGiro(abs(anguloZ)));
     sensor.getRotation(&gx,&gy,&gz);
     tiempo=millis()-tiempo_previo;
     tiempo_previo=millis();
@@ -90,6 +91,21 @@ void detener(){
 }
 
 //FUNCIONES DE CALCULOS
+
+//pwm en giro
+
+int calcularPwmGiro(float angulo){
+  if(angulo<40){
+    return 255;  
+  }
+  else if(angulo>=40 && angulo<60){
+    return 150;
+  }
+  else{
+    return 120;
+  }
+}
+
 //Distancia Adelante
 double CalcularDistancia(){
   digitalWrite(trig,LOW);
@@ -111,28 +127,36 @@ double CalcularDistanciaDer(){
   return duration*0.034/2; //
 }
 
-//FUNCIONES ANTI-CHOQUE
+//FUNCIONES ANTI-CHOQUE y CENTRADORAS
+
+void encontrarCentro(int distanciaIni, int pwm){
+  distanciaAdelante = CalcularDistancia();
+  while((distanciaIni-distanciaAdelante)>(Ancho/2)){
+    avanceAdelante(pwm);
+  }
+}
+
 //Choques frontales
-//int FrenadoAutomatico(int distancia){
-//  if(distancia>=29){
+//int FrenadoAutomatico(int distanciaAdelante){
+//  if(distanciaAdelante>=29){
 //    return 255; //100%
-//  }else if(distancia<29 && distancia>=22){
+//  }else if(distanciaAdelante<29 && distanciaAdelante>=22){
 //    return 204; //80%
-//  }else if(distancia<22 && distancia>=20){
+//  }else if(distanciaAdelante<22 && distanciaAdelante>=20){
 //    return 120; //60%
-//  }else if(distancia<20 && distancia>=18){
+//  }else if(distanciaAdelante<20 && distanciaAdelante>=18){
 //    return 51; //40%
 //  }else{
 //    return 0;
 //  }
 //}
-int FrenadoAutomatico(int distancia){
-  if(distancia>=29){
+int FrenadoAutomatico(int distanciaAdelante){
+  if(distanciaAdelante>=29){
     return 255; //100%
-  }else if(distancia<22 && distancia>=20){
+  }else if(distanciaAdelante<29 && distanciaAdelante>=15){
     return 120; //60%
-  }else if(distancia<20 && distancia>=18){
-    return 51; //40%
+  }else if(distanciaAdelante<15 && distanciaAdelante>=10){
+    return 70; //40%
   }else{
     return 0;
   }
@@ -199,29 +223,32 @@ void loop() {
   unsigned long tiempoActual = millis();
 
   distanciaDer = CalcularDistanciaDer();
-  distancia = CalcularDistancia();
-  int pwm   = FrenadoAutomatico(distancia);
+  distanciaAdelante = CalcularDistancia();
+  int pwm   = FrenadoAutomatico(distanciaAdelante);
   Serial.print("pwm: ");
   Serial.println(pwm);
-  //Serial.println(distancia);
+  Serial.println(distanciaAdelante);
 
   float angulo = 0; 
    Serial.println(distanciaDer);
-   if(pwm!=0 && distanciaDer<=15){ //Se mueve para adelante y no tiene lugar a la derecha 
+   if(pwm!=0 && distanciaDer<=(Ancho/2)){ //Se mueve para adelante y no tiene lugar a la derecha 
     //Avance adelante
       avanceAdelante(pwm);
-   }else if(distanciaDer>15){  //Se mueve adelante y tiene lugar a la derecha
+   }else if(distanciaDer>(Ancho/2)){  //Se mueve adelante y tiene lugar a la derecha
     //Frene, gire derecha, avance
+      encontrarCentro(distanciaAdelante,pwm); //nos centra en el medio del pasillo para doblar
       detener();
       anguloDerecha();
       detener();
-      while(distanciaDer>15){
+      while(distanciaDer>(Ancho/2)){
         avanceAdelante(150);
+        distanciaDer = CalcularDistanciaDer();
       }
-   }else if(pwm==0 && distanciaDer<=15){ //No se mueve adelante y no tiene lugar a la derecha
+   }else if(pwm==0 && distanciaDer<=(Ancho/2)){ //No se mueve adelante y no tiene lugar a la derecha
     //Gire izquierda
       detener();
       anguloIzquierda();
+      Serial.println("pase por aca");
       detener();
    }
 }
