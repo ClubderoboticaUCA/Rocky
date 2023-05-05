@@ -210,18 +210,14 @@ void loop() {
    if(pwm!=0 && distanciaDer<=15){ //Se mueve para adelante y no tiene lugar a la derecha 
     //Avance adelante
       avanceAdelante(pwm);
-   }else if(pwm!=0 && distanciaDer>15){  //Se mueve adelante y tiene lugar a la derecha
+   }else if(distanciaDer>15){  //Se mueve adelante y tiene lugar a la derecha
     //Frene, gire derecha, avance
       detener();
       anguloDerecha();
       detener();
-      //avanceAdelante();
-   }else if(pwm==0 && distanciaDer>15){ //No se mueve adelante y tiene lugar a la derecha
-    //Gire derecha, avance
-      detener();
-      anguloDerecha();
-      detener();
-      //avanceAdelante();
+      while(distanciaDer>15){
+        avanceAdelante(150);
+      }
    }else if(pwm==0 && distanciaDer<=15){ //No se mueve adelante y no tiene lugar a la derecha
     //Gire izquierda
       detener();
@@ -229,3 +225,11 @@ void loop() {
       detener();
    }
 }
+
+
+//   }else if(pwm==0 && distanciaDer>15){ //No se mueve adelante y tiene lugar a la derecha
+//    //Gire derecha, avance
+//      detener();
+//      anguloDerecha();
+//      detener();
+//      //avanceAdelante();
