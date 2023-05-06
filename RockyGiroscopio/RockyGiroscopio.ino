@@ -16,7 +16,7 @@
 
 //valores para este laberinto
 #define Ancho 32
-#define distanciaFrenado 12
+#define distanciaFrenado 11
 #define distanciaPared 7
 #define multiplicadorTranqui 10
 #define multiplicadorPeligro 24
@@ -53,6 +53,22 @@ void avanceAdelanteGuiado(){
 }
 
 //Hacia la Derecha
+
+void correccionDer(int anguloDesface){
+  int gx,gy,gz;
+  float anguloZ=0, anguloZ_previo=0;
+  Serial.println("estoy derecha");
+  while(abs(anguloZ)<anguloDesface-90){
+    //Serial.println(abs(anguloZ));
+    giroIzquierda(128);
+    sensor.getRotation(&gx,&gy,&gz);
+    tiempo=millis()-tiempo_previo;
+    tiempo_previo=millis();
+    anguloZ = (gz/131)*tiempo/1000.0 + anguloZ_previo;
+    anguloZ_previo=anguloZ;
+  }
+}
+
 void giroDerecha(int pwm){
    analogWrite(pin_pwmA,pwm);
    analogWrite(pin_pwmB,pwm);
@@ -76,21 +92,6 @@ void anguloDerecha(){
   }
   if (anguloZ>92){
     correccionDer(anguloZ);
-  }
-}
-
-void correcionDer(int anguloDesface){
-  int gx,gy,gz;
-  float anguloZ=0, anguloZ_previo=0;
-  Serial.println("estoy derecha");
-  while(abs(anguloZ)<anguloDesface-90){
-    //Serial.println(abs(anguloZ));
-    giroIzquierda(128);
-    sensor.getRotation(&gx,&gy,&gz);
-    tiempo=millis()-tiempo_previo;
-    tiempo_previo=millis();
-    anguloZ = (gz/131)*tiempo/1000.0 + anguloZ_previo;
-    anguloZ_previo=anguloZ;
   }
 }
 
@@ -124,7 +125,7 @@ void detener(){
   digitalWrite(out1,LOW);
   digitalWrite(out2,LOW);
   digitalWrite(out3,LOW);
-  delay(3000);
+  delay(1000);
 }
 
 //FUNCIONES DE CALCULOS
@@ -133,14 +134,14 @@ void detener(){
 
 int calcularPwmGiro(float angulo){
   if(angulo<50){
-    return 255;  
+    return 220;  
   }
   else if(angulo>=50 && angulo<60){
-    return 138
+    return 135
     ;
   }
   else{
-    return 130;
+    return 128;
   }
 }
 
@@ -169,7 +170,7 @@ double CalcularDistanciaDer(){
 
 boolean encontrarCentro(int distanciaIni, int pwm){
   distanciaAdelante = CalcularDistancia();
-  while((distanciaIni-distanciaAdelante)<(Ancho/5) ){
+  while((distanciaIni-distanciaAdelante)<(Ancho/3) ){
     avanceAdelante(pwm);
     distanciaAdelante = CalcularDistancia();
   }
@@ -184,7 +185,7 @@ boolean encontrarCentro(int distanciaIni, int pwm){
 
 int FrenadoAutomatico(int distanciaAdelante){
   if(distanciaAdelante>=29){
-    return 255; //100%
+    return 220; //100%
   }else if(distanciaAdelante<29 && distanciaAdelante>=12){
     return 130; //
   }else if(distanciaAdelante<12 && distanciaAdelante>=distanciaFrenado){
@@ -282,10 +283,12 @@ void loop() {
         anguloDerecha();
         detener();
         
-        distanciaDer = CalcularDistanciaDer();
-        while(distanciaDer>(Ancho/2)){
+        //distanciaDer = CalcularDistanciaDer();
+        //distanciaAdelante = CalcularDistancia();
+        while(CalcularDistanciaDer()>(Ancho/2) && CalcularDistancia()>distanciaFrenado){
           avanceAdelante(135);
-          distanciaDer = CalcularDistanciaDer();
+          //distanciaDer = CalcularDistanciaDer();
+          //distanciaAdelante = CalcularDistancia();
         }
       }
    }else if(pwm==0 && distanciaDer<=(Ancho/2)){ //No se mueve adelante y no tiene lugar a la derecha
