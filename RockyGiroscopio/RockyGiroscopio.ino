@@ -17,9 +17,9 @@
 //valores para este laberinto
 #define Ancho 32
 #define distanciaFrenado 11
-#define distanciaPared 7
-#define multiplicadorTranqui 10
-#define multiplicadorPeligro 24
+#define distanciaPared 9
+#define multiplicadorTranqui 9
+#define multiplicadorPeligro 18
 #define tolerancia 1
  
 MPU6050 sensor;
@@ -81,7 +81,7 @@ void anguloDerecha(){
   int gx,gy,gz;
   float anguloZ=0, anguloZ_previo=0;
   Serial.println("estoy derecha");
-  while(abs(anguloZ)<88){
+  while(abs(anguloZ)<85){
     //Serial.println(abs(anguloZ));
     giroDerecha(calcularPwmGiro(abs(anguloZ)));
     sensor.getRotation(&gx,&gy,&gz);
@@ -108,7 +108,7 @@ void anguloIzquierda(){
   int gx,gy,gz;
   float anguloZ=0, anguloZ_previo=0;
   Serial.println("estoy izuierda");
-  while(abs(anguloZ)<88){
+  while(abs(anguloZ)<85){
     //Serial.println(abs(anguloZ));
     giroIzquierda(calcularPwmGiro(abs(anguloZ)));
     sensor.getRotation(&gx,&gy,&gz);
@@ -137,11 +137,11 @@ int calcularPwmGiro(float angulo){
     return 220;  
   }
   else if(angulo>=50 && angulo<60){
-    return 135
+    return 140
     ;
   }
   else{
-    return 128;
+    return 133;
   }
 }
 
@@ -170,7 +170,7 @@ double CalcularDistanciaDer(){
 
 boolean encontrarCentro(int distanciaIni, int pwm){
   distanciaAdelante = CalcularDistancia();
-  while((distanciaIni-distanciaAdelante)<(Ancho/3) ){
+  while((distanciaIni-distanciaAdelante)<(Ancho/4) ){
     avanceAdelante(pwm);
     distanciaAdelante = CalcularDistancia();
   }
@@ -187,9 +187,9 @@ int FrenadoAutomatico(int distanciaAdelante){
   if(distanciaAdelante>=29){
     return 220; //100%
   }else if(distanciaAdelante<29 && distanciaAdelante>=12){
-    return 130; //
+    return 135; //
   }else if(distanciaAdelante<12 && distanciaAdelante>=distanciaFrenado){
-    return 120; //
+    return 125; //
   }else{
     return 0;
   }
@@ -202,7 +202,7 @@ void autoGuiado(){
   int pwmizq=pwm;
   
   distanciaDer = CalcularDistanciaDer();
-  if (distanciaDer<=(Ancho/2)){
+  if (distanciaDer<=(Ancho/3)){
     if (distanciaDer<=distanciaPared){
       if (distanciaDer<=distanciaPared-tolerancia){
         pwmizq=pwmizq-(distanciaPared-distanciaDer)*multiplicadorPeligro;
