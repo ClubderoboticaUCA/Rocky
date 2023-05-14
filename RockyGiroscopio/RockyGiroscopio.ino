@@ -16,7 +16,7 @@
 
 //valores para este laberinto
 #define Ancho 32
-#define distanciaFrenado 11
+#define distanciaFrenado 13
 #define distanciaPared 9
 #define multiplicadorTranqui 9
 #define multiplicadorPeligro 18
@@ -81,7 +81,7 @@ void anguloDerecha(){
   int gx,gy,gz;
   float anguloZ=0, anguloZ_previo=0;
   Serial.println("estoy derecha");
-  while(abs(anguloZ)<85){
+  while(abs(anguloZ)<87){
     //Serial.println(abs(anguloZ));
     giroDerecha(calcularPwmGiro(abs(anguloZ)));
     sensor.getRotation(&gx,&gy,&gz);
@@ -108,7 +108,7 @@ void anguloIzquierda(){
   int gx,gy,gz;
   float anguloZ=0, anguloZ_previo=0;
   Serial.println("estoy izuierda");
-  while(abs(anguloZ)<85){
+  while(abs(anguloZ)<87){
     //Serial.println(abs(anguloZ));
     giroIzquierda(calcularPwmGiro(abs(anguloZ)));
     sensor.getRotation(&gx,&gy,&gz);
@@ -137,11 +137,11 @@ int calcularPwmGiro(float angulo){
     return 220;  
   }
   else if(angulo>=50 && angulo<60){
-    return 140
+    return 180
     ;
   }
   else{
-    return 133;
+    return 153;
   }
 }
 
@@ -170,7 +170,7 @@ double CalcularDistanciaDer(){
 
 boolean encontrarCentro(int distanciaIni, int pwm){
   distanciaAdelante = CalcularDistancia();
-  while((distanciaIni-distanciaAdelante)<(Ancho/4) ){
+  while((distanciaIni-distanciaAdelante)<(Ancho/4) && distanciaAdelante>distanciaFrenado){
     avanceAdelante(pwm);
     distanciaAdelante = CalcularDistancia();
   }
@@ -202,7 +202,7 @@ void autoGuiado(){
   int pwmizq=pwm;
   
   distanciaDer = CalcularDistanciaDer();
-  if (distanciaDer<=(Ancho/3)){
+  if (distanciaDer<=(Ancho/2)){
     if (distanciaDer<=distanciaPared){
       if (distanciaDer<=distanciaPared-tolerancia){
         pwmizq=pwmizq-(distanciaPared-distanciaDer)*multiplicadorPeligro;
